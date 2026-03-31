@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+node_modules/
+qdrant_data/
+shopping_assistant.db
