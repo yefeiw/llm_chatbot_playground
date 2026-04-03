@@ -14,7 +14,7 @@ from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.embed_service import EmbedService
 from app.services.llm_service import LLMService
 from app.services.memory_service import MemoryService
-from app.services.retrieval_service import RetrievalService
+from app.services.retrieval_service import get_retrieval_service
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
 
     memory = MemoryService()
     embedder = EmbedService()
-    retriever = RetrievalService()
+    retriever = get_retrieval_service()
     llm = LLMService()
 
     memory.ensure_session(db, request.session_id)

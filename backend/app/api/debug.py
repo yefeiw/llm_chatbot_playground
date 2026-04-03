@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.db.models import LLMEvent, Message, RetrievalEvent
 from app.db.session import get_db
 from app.services.embed_service import EmbedService
-from app.services.retrieval_service import RetrievalService
+from app.services.retrieval_service import get_retrieval_service
 
 router = APIRouter(prefix="/debug", tags=["debug"])
 
@@ -57,13 +57,13 @@ def get_logs(session_id: str, db: Session = Depends(get_db)):
 def reindex(db: Session = Depends(get_db)):
     from app.services.ingestion_service import IngestionService
 
-    service = IngestionService(embed_service=EmbedService(), retrieval_service=RetrievalService())
+    service = IngestionService(embed_service=EmbedService(), retrieval_service=get_retrieval_service())
     return service.seed_and_index(db, total_products=1000)
 
 
 @router.get("/retrieve")
 def debug_retrieve(query: str, top_k: int = 8):
     embedder = EmbedService()
-    retriever = RetrievalService()
+    retriever = get_retrieval_service()
     vec = embedder.embed_text(query)
     return retriever.search(vec, top_k=top_k)
