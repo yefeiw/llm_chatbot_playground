@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-label="Illustration of a keyboard">
+  <rect width="800" height="520" fill="#fff7e7"/>
+  <circle cx="626" cy="130" r="96" fill="#dbe8d6"/>
+  <rect x="116" y="190" width="568" height="190" rx="34" fill="#263f2b"/>
+  <g fill="#fffaf0">
+    <rect x="154" y="226" width="62" height="42" rx="10"/><rect x="234" y="226" width="62" height="42" rx="10"/><rect x="314" y="226" width="62" height="42" rx="10"/><rect x="394" y="226" width="62" height="42" rx="10"/><rect x="474" y="226" width="62" height="42" rx="10"/><rect x="554" y="226" width="62" height="42" rx="10"/>
+    <rect x="154" y="292" width="62" height="42" rx="10"/><rect x="234" y="292" width="142" height="42" rx="10"/><rect x="394" y="292" width="62" height="42" rx="10"/><rect x="474" y="292" width="142" height="42" rx="10"/>
+  </g>
+  <text x="54" y="86" fill="#263f2b" font-family="Georgia, serif" font-size="42" font-weight="700">Keyboards</text>
+</svg>

@@ -3,5 +3,7 @@ __pycache__/
 *.pyc
 .env
 node_modules/
+dist/
 qdrant_data/
 shopping_assistant.db
+.codex

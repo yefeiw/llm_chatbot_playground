@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-label="Illustration of a blender">
+  <rect width="800" height="520" fill="#fff7e7"/>
+  <circle cx="642" cy="112" r="102" fill="#dbe8d6"/>
+  <path d="M320 114h160l-30 212H350z" fill="#f0d9a3" stroke="#263f2b" stroke-width="20" stroke-linejoin="round"/>
+  <path d="M338 198h124" stroke="#c86d4d" stroke-width="18" stroke-linecap="round"/>
+  <rect x="318" y="326" width="164" height="112" rx="26" fill="#4f6f52"/>
+  <circle cx="400" cy="382" r="24" fill="#fffaf0"/>
+  <text x="54" y="86" fill="#263f2b" font-family="Georgia, serif" font-size="42" font-weight="700">Blenders</text>
+</svg>

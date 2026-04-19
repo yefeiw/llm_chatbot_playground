@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-label="Illustration of a desk chair">
+  <rect width="800" height="520" fill="#fbf2df"/>
+  <circle cx="642" cy="124" r="106" fill="#f0d9a3"/>
+  <rect x="312" y="108" width="176" height="206" rx="48" fill="#4f6f52"/>
+  <rect x="272" y="302" width="256" height="84" rx="42" fill="#263f2b"/>
+  <path d="M400 386v54M332 454h136M400 440l-88 34M400 440l88 34" stroke="#263f2b" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="302" cy="480" r="18" fill="#c86d4d"/>
+  <circle cx="498" cy="480" r="18" fill="#c86d4d"/>
+  <text x="54" y="86" fill="#263f2b" font-family="Georgia, serif" font-size="42" font-weight="700">Desk Chairs</text>
+</svg>

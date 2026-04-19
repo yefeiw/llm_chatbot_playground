@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-label="Illustration of a vacuum cleaner">
+  <rect width="800" height="520" fill="#fff7e7"/>
+  <circle cx="610" cy="126" r="104" fill="#dbe8d6"/>
+  <path d="M322 148l88 206" stroke="#263f2b" stroke-width="22" stroke-linecap="round"/>
+  <rect x="354" y="314" width="172" height="104" rx="40" fill="#4f6f52"/>
+  <circle cx="398" cy="430" r="24" fill="#263f2b"/>
+  <circle cx="498" cy="430" r="24" fill="#263f2b"/>
+  <path d="M288 112h74l-10 58h-52z" fill="#c86d4d"/>
+  <text x="54" y="86" fill="#263f2b" font-family="Georgia, serif" font-size="42" font-weight="700">Vacuums</text>
+</svg>

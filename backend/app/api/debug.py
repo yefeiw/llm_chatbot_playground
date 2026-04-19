@@ -58,7 +58,7 @@ def reindex(db: Session = Depends(get_db)):
     from app.services.ingestion_service import IngestionService
 
     service = IngestionService(embed_service=EmbedService(), retrieval_service=get_retrieval_service())
-    return service.seed_and_index(db, total_products=1000)
+    return service.seed_and_index(db, total_products=1500)
 
 
 @router.get("/retrieve")
