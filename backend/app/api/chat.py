@@ -22,6 +22,11 @@ logger = logging.getLogger(__name__)
 
 @router.post("", response_model=ChatResponse)
 def chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
+    """Run one grounded shopping-assistant turn.
+
+    Current retrieval embeds only the latest user message. Follow-up query
+    rewriting is intentionally left as the next retrieval-quality milestone.
+    """
     if not request.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
@@ -36,6 +41,8 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
 
     memory_text = "\n".join(f"{m.role}: {m.content}" for m in messages)
 
+    # Retrieval currently happens before generation; the LLM can only recommend
+    # products present in this context.
     logger.info("Embedding query", extra={"session_id": request.session_id})
     query_vector = embedder.embed_text(request.message)
 
@@ -94,6 +101,8 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
     )
     db.commit()
 
+    # Product cards are returned as structured data so the frontend does not
+    # have to scrape product details out of the assistant's prose.
     products = [
         ProductResult(
             product_uid=str(h["payload"].get("product_uid") or ""),
