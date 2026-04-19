@@ -7,6 +7,8 @@ A product-only shopping assistant with:
 - SQLite for session memory and structured event logging
 - React/Vite UI chat client
 
+See [docs/project-overview.md](docs/project-overview.md) for architecture, current status, known gaps, and next steps.
+
 ## What it does
 - Seeds 1,500 mock products across 15 categories.
 - Adds generated local product illustrations, prices, specs, ratings, and review counts.
