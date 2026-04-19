@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-label="Illustration of a monitor">
+  <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#f4c86b"/><stop offset="1" stop-color="#9fb99c"/></linearGradient></defs>
+  <rect width="800" height="520" fill="#fbf2df"/>
+  <rect x="128" y="112" width="544" height="300" rx="30" fill="#263f2b"/>
+  <rect x="160" y="144" width="480" height="236" rx="16" fill="url(#g)"/>
+  <path d="M400 412v48" stroke="#263f2b" stroke-width="30" stroke-linecap="round"/>
+  <path d="M294 462h212" stroke="#4f6f52" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="650" cy="102" r="74" fill="#dbe8d6"/>
+  <text x="54" y="86" fill="#263f2b" font-family="Georgia, serif" font-size="42" font-weight="700">Monitors</text>
+</svg>

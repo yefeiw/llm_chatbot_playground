@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-label="Illustration of a laptop">
+  <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#d7e7f0"/><stop offset="1" stop-color="#c86d4d"/></linearGradient></defs>
+  <rect width="800" height="520" fill="#f7f1e5"/>
+  <circle cx="640" cy="392" r="120" fill="#f0d9a3"/>
+  <rect x="180" y="118" width="440" height="270" rx="22" fill="#263f2b"/>
+  <rect x="210" y="148" width="380" height="210" rx="12" fill="url(#g)"/>
+  <path d="M125 395h550l-48 70H173z" fill="#4f6f52"/>
+  <path d="M325 420h150" stroke="#fff7e7" stroke-width="14" stroke-linecap="round"/>
+  <text x="54" y="86" fill="#263f2b" font-family="Georgia, serif" font-size="42" font-weight="700">Laptops</text>
+</svg>

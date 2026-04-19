@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-label="Illustration of a coffee maker">
+  <rect width="800" height="520" fill="#fbf2df"/>
+  <circle cx="610" cy="392" r="112" fill="#f0d9a3"/>
+  <rect x="282" y="128" width="220" height="310" rx="38" fill="#263f2b"/>
+  <rect x="330" y="172" width="124" height="90" rx="16" fill="#fffaf0"/>
+  <path d="M320 302h150v86H320z" fill="#4f6f52"/>
+  <path d="M470 316h52c32 0 32 58 0 58h-52" fill="none" stroke="#263f2b" stroke-width="20"/>
+  <path d="M354 100c-20-28 24-42 4-70M408 100c-20-28 24-42 4-70" stroke="#c86d4d" stroke-width="10" stroke-linecap="round"/>
+  <text x="54" y="86" fill="#263f2b" font-family="Georgia, serif" font-size="42" font-weight="700">Coffee Makers</text>
+</svg>

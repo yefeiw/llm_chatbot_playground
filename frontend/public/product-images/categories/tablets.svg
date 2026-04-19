@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-label="Illustration of a tablet">
+  <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#f4c86b"/><stop offset="1" stop-color="#c86d4d"/></linearGradient></defs>
+  <rect width="800" height="520" fill="#fff7e7"/>
+  <circle cx="642" cy="116" r="106" fill="#dbe8d6"/>
+  <rect x="250" y="116" width="300" height="320" rx="38" fill="#263f2b"/>
+  <rect x="280" y="150" width="240" height="246" rx="20" fill="url(#g)"/>
+  <circle cx="400" cy="416" r="12" fill="#fffaf0"/>
+  <path d="M580 190l-72 168" stroke="#4f6f52" stroke-width="16" stroke-linecap="round"/>
+  <text x="54" y="86" fill="#263f2b" font-family="Georgia, serif" font-size="42" font-weight="700">Tablets</text>
+</svg>

@@ -62,6 +62,7 @@ class IngestionService:
                 f"Brand: {item.brand}\n"
                 f"Category: {item.category}\n"
                 f"Description: {item.description}\n"
+                f"Price: ${item.price_cents / 100:.2f}\n"
                 f"Rating: {item.rating} ({item.review_count} reviews)\n"
                 f"Specs: {'; '.join(specs_lines[:20])}"
             )
@@ -80,6 +81,9 @@ class IngestionService:
                         "brand": item.brand,
                         "category": item.category,
                         "description": item.description,
+                        "price_cents": item.price_cents,
+                        "image_url": item.image_url,
+                        "product_url": item.product_url,
                         "rating": item.rating,
                         "review_count": item.review_count,
                         "specs": specs_lines[:30],

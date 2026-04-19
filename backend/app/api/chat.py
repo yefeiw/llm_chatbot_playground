@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db.models import LLMEvent, RetrievalEvent
 from app.db.session import get_db
-from app.schemas.chat import ChatRequest, ChatResponse
+from app.schemas.chat import ChatRequest, ChatResponse, ProductResult
 from app.services.embed_service import EmbedService
 from app.services.llm_service import LLMService
 from app.services.memory_service import MemoryService
@@ -94,8 +94,26 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
     )
     db.commit()
 
+    products = [
+        ProductResult(
+            product_uid=str(h["payload"].get("product_uid") or ""),
+            title=str(h["payload"].get("title") or ""),
+            brand=str(h["payload"].get("brand") or ""),
+            category=str(h["payload"].get("category") or ""),
+            description=str(h["payload"].get("description") or ""),
+            price_cents=h["payload"].get("price_cents"),
+            image_url=h["payload"].get("image_url"),
+            product_url=h["payload"].get("product_url"),
+            rating=h["payload"].get("rating"),
+            review_count=h["payload"].get("review_count"),
+            score=h.get("score"),
+            specs=h["payload"].get("specs", []),
+        )
+        for h in hits
+    ]
+
     return ChatResponse(
         session_id=request.session_id,
         answer=answer,
-        retrieved_products=[h["payload"].get("product_uid") for h in hits],
+        products=products,
     )

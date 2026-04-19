@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-label="Illustration of a backpack">
+  <rect width="800" height="520" fill="#f7f1e5"/>
+  <circle cx="630" cy="120" r="108" fill="#f0d9a3"/>
+  <path d="M292 190c0-66 44-112 108-112s108 46 108 112v226H292z" fill="#4f6f52"/>
+  <path d="M326 208c0-46 30-78 74-78s74 32 74 78" fill="none" stroke="#263f2b" stroke-width="18"/>
+  <rect x="330" y="300" width="140" height="86" rx="24" fill="#fffaf0"/>
+  <path d="M292 236h-50v124M508 236h50v124" stroke="#263f2b" stroke-width="20" stroke-linecap="round"/>
+  <text x="54" y="86" fill="#263f2b" font-family="Georgia, serif" font-size="42" font-weight="700">Backpacks</text>
+</svg>

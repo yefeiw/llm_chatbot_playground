@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-label="Illustration of a suitcase">
+  <rect width="800" height="520" fill="#fff7e7"/>
+  <circle cx="632" cy="118" r="106" fill="#dbe8d6"/>
+  <rect x="286" y="146" width="228" height="274" rx="36" fill="#c86d4d"/>
+  <path d="M350 146v-46h100v46" fill="none" stroke="#263f2b" stroke-width="18" stroke-linecap="round"/>
+  <path d="M352 188v190M448 188v190" stroke="#fffaf0" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="334" cy="444" r="20" fill="#263f2b"/>
+  <circle cx="466" cy="444" r="20" fill="#263f2b"/>
+  <text x="54" y="86" fill="#263f2b" font-family="Georgia, serif" font-size="42" font-weight="700">Suitcases</text>
+</svg>

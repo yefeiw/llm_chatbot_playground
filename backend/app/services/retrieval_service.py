@@ -35,6 +35,16 @@ def get_retrieval_service() -> "RetrievalService":
     return _retrieval_service
 
 
+def close_qdrant_client() -> None:
+    global _qdrant_client, _retrieval_service
+
+    with _client_lock:
+        if _qdrant_client is not None:
+            _qdrant_client.close()
+        _qdrant_client = None
+        _retrieval_service = None
+
+
 class RetrievalService:
     def __init__(self) -> None:
         self.client = get_qdrant_client()
