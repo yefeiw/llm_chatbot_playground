@@ -19,6 +19,7 @@ class IngestionService:
         self.retrieval_service = retrieval_service
 
     def seed_and_index(self, db: Session, total_products: int = 1000) -> dict:
+        """Replace the local catalog and rebuild the matching Qdrant collection."""
         logger.info("Seeding products", extra={"total_products": total_products})
         db.query(VariantAttribute).delete()
         db.query(Variant).delete()
@@ -57,6 +58,8 @@ class IngestionService:
                     db.add(VariantAttribute(variant_id=variant.id, name=spec_name, value=spec_value))
                     specs_lines.append(f"{spec_name}: {spec_value}")
 
+            # Keep the embedded text compact but include the fields users ask
+            # about most often: category, price, rating, and top specs.
             embed_text = (
                 f"Product: {item.title}\n"
                 f"Brand: {item.brand}\n"
@@ -69,6 +72,7 @@ class IngestionService:
             vector = self.embed_service.embed_text(embed_text)
             if vector_size is None:
                 vector_size = len(vector)
+                # Recreate only after the first embedding tells us vector size.
                 self.retrieval_service.recreate_collection(vector_size=vector_size)
 
             points.append(

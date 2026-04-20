@@ -3,6 +3,9 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 
+# This module intentionally creates deterministic synthetic products.
+# The seed data gives us a stable retrieval playground without depending on
+# Amazon scraping, affiliate API credentials, or real merchant feeds.
 CATEGORIES = [
     "headphones",
     "laptops",
@@ -58,6 +61,7 @@ class ProductSeed:
 
 
 def _variant_specs(category: str) -> dict[str, str]:
+    """Return category-specific variant attributes for retrieval and display."""
     base = {
         "color": random.choice(["Black", "White", "Blue", "Gray", "Green"]),
         "weight_kg": f"{round(random.uniform(0.2, 4.0), 2)}",
@@ -89,6 +93,7 @@ def _price_cents(category: str) -> int:
 
 
 def generate_products(total_products: int = 1000) -> list[ProductSeed]:
+    """Generate a repeatable catalog split evenly across configured categories."""
     random.seed(42)
     products: list[ProductSeed] = []
 

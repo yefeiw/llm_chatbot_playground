@@ -14,6 +14,11 @@ _retrieval_service: "RetrievalService" | None = None
 
 
 def get_qdrant_client() -> QdrantClient:
+    """Return one local Qdrant client per process.
+
+    File-backed Qdrant storage cannot be safely opened by multiple Python
+    processes at once, so callers should share this singleton inside a process.
+    """
     global _qdrant_client
 
     if _qdrant_client is None:
@@ -36,6 +41,7 @@ def get_retrieval_service() -> "RetrievalService":
 
 
 def close_qdrant_client() -> None:
+    """Close the singleton before script shutdown to avoid noisy destructors."""
     global _qdrant_client, _retrieval_service
 
     with _client_lock:
