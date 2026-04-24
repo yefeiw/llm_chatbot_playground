@@ -126,20 +126,37 @@ function ProductCard({ product }: { product: ProductResult }) {
     <article className="product-card">
       <div className="product-image-wrap">
         <img src={imageUrl} alt="" className="product-image" loading="lazy" />
+        {product.rank && <span className="rank-badge">#{product.rank}</span>}
         <span className="match-badge">{score}</span>
       </div>
       <div className="product-body">
         <div className="product-kicker">
           <span>{product.brand}</span>
-          <span>{category}</span>
+          <span>{product.rank ? `#${product.rank} ${category}` : category}</span>
         </div>
         <h3>{product.title}</h3>
+        {product.variant_name && <div className="variant-label">{product.variant_name}</div>}
         <p>{product.description}</p>
+        {product.rank_summary && <p className="rank-summary">{product.rank_summary}</p>}
         <div className="product-meta">
           <strong>{price}</strong>
           <span>{product.rating ?? 'N/A'} rating</span>
           <span>{product.review_count?.toLocaleString() ?? 'N/A'} reviews</span>
         </div>
+        {product.evidence.length > 0 && (
+          <div className="evidence-list" aria-label="Ranking evidence">
+            {product.evidence.slice(0, 4).map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        )}
+        {product.caveats.length > 0 && (
+          <div className="caveat-list" aria-label="Ranking caveats">
+            {product.caveats.slice(0, 2).map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        )}
         <div className="spec-list">
           {product.specs.slice(0, 5).map((spec) => (
             <span key={spec}>{spec}</span>
