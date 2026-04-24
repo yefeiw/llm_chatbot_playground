@@ -1,15 +1,21 @@
 export type ProductResult = {
+  rank: number | null
   product_uid: string
   title: string
   brand: string
   category: string
   description: string
+  variant_uid: string | null
+  variant_name: string | null
   price_cents: number | null
   image_url: string | null
   product_url: string | null
   rating: number | null
   review_count: number | null
   score: number | null
+  evidence: string[]
+  caveats: string[]
+  rank_summary: string | null
   specs: string[]
 }
 

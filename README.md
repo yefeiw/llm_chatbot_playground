@@ -13,7 +13,7 @@ See [docs/project-overview.md](docs/project-overview.md) for architecture, curre
 - Seeds 1,500 mock products across 15 categories.
 - Adds generated local product illustrations, prices, specs, ratings, and review counts.
 - Embeds product docs and stores vectors in local Qdrant.
-- Answers chat queries using top-k semantic retrieval.
+- Answers chat queries using query-rewritten retrieval, variant selection, and validated LLM reranking with deterministic fallback.
 - Persists full conversation history in DB per session.
 - Exposes debugging endpoints for retrieval and prompt snapshots.
 
@@ -75,22 +75,33 @@ Response:
   "answer": "A concise recommendation based on the retrieved products.",
   "products": [
     {
+      "rank": 1,
       "product_uid": "prod_0419",
       "title": "Aster Suitcases Model 0419",
       "brand": "Aster",
       "category": "suitcases",
       "description": "Reliable suitcases for everyday use with balanced performance.",
+      "variant_uid": "var_0419_0",
+      "variant_name": "Option 1",
       "price_cents": 12900,
       "image_url": "/product-images/categories/suitcases.svg",
       "product_url": "/products/prod_0419",
       "rating": 4.7,
       "review_count": 2301,
       "score": 0.78,
+      "evidence": ["spinner_wheels: yes", "weight_kg: 1.82"],
+      "caveats": [],
+      "rank_summary": "Best match for lightweight spinner-wheel criteria.",
       "specs": ["color: Blue", "weight_kg: 1.82", "spinner_wheels: yes"]
     }
   ]
 }
 ```
+
+### ReAct Demo Chat
+`POST /chat/react-demo`
+
+Accepts the same request body as `/chat`, but runs a demo ReAct-style loop that chooses internal actions such as `rewrite_query`, `retrieve_products`, and `finish`. The response includes the normal answer and product cards plus `retrieval_query` and `agent_steps` for debugging/demo visibility.
 
 ### Debug
 - `GET /debug/session/{session_id}`
@@ -103,4 +114,5 @@ Response:
 ## Notes
 - This is intentionally product-only: no pricing/deals/shipping/offers.
 - The app uses complete session history as memory for each turn.
-- Follow-up query rewriting is a known next step. Short relative prompts like "show me cheaper ones" currently need explicit context handling before retrieval.
+- Follow-up query rewriting runs before retrieval, so short relative prompts like "show me cheaper ones" can carry prior shopping context into vector search.
+- The backend selects one variant per product and uses validated LLM reranking to generate card order, evidence, and caveats. The answer summarizes the ranked cards instead of duplicating the product list.
