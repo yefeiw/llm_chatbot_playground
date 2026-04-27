@@ -102,6 +102,7 @@ Retrieval now handles basic follow-up query rewriting, but it is still unstructu
    - Show why each product matched the user request.
 
 3. **Retrieval quality evaluation**
+   - Use [`evaluation-plan.md`](evaluation-plan.md) as the working plan.
    - Add a small eval set with expected categories and key constraints.
    - Track whether retrieved products satisfy category/spec/price requirements.
    - Run the eval before changing retrieval logic.
