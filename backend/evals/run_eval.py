@@ -141,9 +141,17 @@ def seed_variant_db(db: Session, products: list[ProductSeed]) -> None:
 def print_human_summary(results: list[EvalResult]) -> None:
     passed = sum(1 for result in results if result.passed)
     print(f"Eval results: {passed}/{len(results)} cases passed")
+    metric_averages = _metric_averages(results)
+    if metric_averages:
+        print("\nMetric averages:")
+        for metric_name, score in sorted(metric_averages.items()):
+            print(f"  {metric_name}: {score:.4f}")
+
     for result in results:
         status = "PASS" if result.passed else "FAIL"
         print(f"\n{status} {result.case_id} ({result.passed_count}/{len(result.checks)} checks)")
+        for metric in result.metrics:
+            print(f"  METRIC {metric.name}: {metric.details}")
         for check in result.checks:
             check_status = "PASS" if check.passed else "FAIL"
             print(f"  {check_status} {check.name}: {check.details}")
@@ -154,16 +162,30 @@ def _json_summary(results: list[EvalResult]) -> dict[str, Any]:
         "passed": all(result.passed for result in results),
         "case_count": len(results),
         "passed_case_count": sum(1 for result in results if result.passed),
+        "metric_averages": _metric_averages(results),
         "cases": [
             {
                 "case_id": result.case_id,
                 "passed": result.passed,
                 "passed_checks": result.passed_count,
                 "total_checks": len(result.checks),
+                "metrics": [metric.__dict__ for metric in result.metrics],
                 "checks": [check.__dict__ for check in result.checks],
             }
             for result in results
         ],
+    }
+
+
+def _metric_averages(results: list[EvalResult]) -> dict[str, float]:
+    scores_by_name: dict[str, list[float]] = {}
+    for result in results:
+        for metric in result.metrics:
+            scores_by_name.setdefault(metric.name, []).append(metric.score)
+    return {
+        name: sum(scores) / len(scores)
+        for name, scores in scores_by_name.items()
+        if scores
     }
 
 

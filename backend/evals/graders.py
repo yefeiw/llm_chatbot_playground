@@ -14,9 +14,17 @@ class EvalCheck:
 
 
 @dataclass(frozen=True)
+class EvalMetric:
+    name: str
+    score: float
+    details: str
+
+
+@dataclass(frozen=True)
 class EvalResult:
     case_id: str
     checks: list[EvalCheck]
+    metrics: list[EvalMetric]
 
     @property
     def passed(self) -> bool:
@@ -43,6 +51,7 @@ def grade_case_output(
     case_id = str(case.get("case_id") or "unknown")
     expect = case.get("expect") or {}
     checks: list[EvalCheck] = []
+    metrics: list[EvalMetric] = []
 
     if expected_terms := _as_list(expect.get("query_should_include")):
         checks.append(_query_contains_terms(retrieval_query, expected_terms))
@@ -70,11 +79,31 @@ def grade_case_output(
     if expected_top := _as_list(expect.get("expected_top_product_uids")):
         checks.append(_top_products_match(hits, expected_top))
 
+    relevance_by_uid = _as_dict(expect.get("graded_relevance"))
+    if precision_config := _as_dict(expect.get("precision_at_k")):
+        metric = _precision_at_k(hits, precision_config, relevance_by_uid)
+        metrics.append(metric)
+        checks.append(_metric_threshold_check(metric, precision_config))
+
+    if recall_config := _as_dict(expect.get("recall_at_k")):
+        metric = _recall_at_k(hits, recall_config, relevance_by_uid)
+        metrics.append(metric)
+        checks.append(_metric_threshold_check(metric, recall_config))
+
+    if mrr_config := _as_dict(expect.get("mrr")):
+        metric = _mrr(hits, mrr_config, relevance_by_uid)
+        metrics.append(metric)
+        checks.append(_metric_threshold_check(metric, mrr_config))
+
     if ndcg_config := _as_dict(expect.get("ndcg_at_k")):
-        checks.append(_ndcg_at_k(hits, ndcg_config, _as_dict(expect.get("graded_relevance"))))
+        metric = _ndcg_at_k(hits, ndcg_config, relevance_by_uid)
+        metrics.append(metric)
+        checks.append(_metric_threshold_check(metric, ndcg_config))
 
     if wpr_config := _as_dict(expect.get("wpr_at_k")):
-        checks.append(_wpr_at_k(hits, wpr_config, _as_dict(expect.get("graded_relevance"))))
+        metric = _wpr_at_k(hits, wpr_config, relevance_by_uid)
+        metrics.append(metric)
+        checks.append(_metric_threshold_check(metric, wpr_config))
 
     if expect.get("rank_source_present"):
         checks.append(_rank_source_present(hits))
@@ -92,7 +121,7 @@ def grade_case_output(
     if not checks:
         checks.append(EvalCheck("case_has_checks", False, "No supported expectations found."))
 
-    return EvalResult(case_id=case_id, checks=checks)
+    return EvalResult(case_id=case_id, checks=checks, metrics=metrics)
 
 
 def attrs_from_specs(specs: object) -> dict[str, str]:
@@ -260,23 +289,83 @@ def _top_products_match(hits: list[dict[str, Any]], expected_uids: list[str]) ->
     )
 
 
+def _precision_at_k(
+    hits: list[dict[str, Any]],
+    config: dict[str, Any],
+    relevance_by_uid: dict[str, Any],
+) -> EvalMetric:
+    k = int(config.get("k") or len(hits))
+    relevant_threshold = float(config.get("relevant_threshold") or 1.0)
+    relevance_values = _ranked_relevance(hits, relevance_by_uid, k)
+    relevant_count = sum(1 for relevance in relevance_values if relevance >= relevant_threshold)
+    score = relevant_count / k if k > 0 else 0.0
+
+    return EvalMetric(
+        name=f"precision_at_{k}",
+        score=score,
+        details=f"score={score:.4f}; relevant={relevant_count}; k={k}; threshold={relevant_threshold:g}",
+    )
+
+
+def _recall_at_k(
+    hits: list[dict[str, Any]],
+    config: dict[str, Any],
+    relevance_by_uid: dict[str, Any],
+) -> EvalMetric:
+    k = int(config.get("k") or len(hits))
+    relevant_threshold = float(config.get("relevant_threshold") or 1.0)
+    relevance_values = _ranked_relevance(hits, relevance_by_uid, k)
+    retrieved_relevant_count = sum(1 for relevance in relevance_values if relevance >= relevant_threshold)
+    total_relevant_count = sum(1 for relevance in relevance_by_uid.values() if float(relevance) >= relevant_threshold)
+    score = retrieved_relevant_count / total_relevant_count if total_relevant_count > 0 else 0.0
+
+    return EvalMetric(
+        name=f"recall_at_{k}",
+        score=score,
+        details=(
+            f"score={score:.4f}; retrieved_relevant={retrieved_relevant_count}; "
+            f"total_relevant={total_relevant_count}; threshold={relevant_threshold:g}"
+        ),
+    )
+
+
+def _mrr(
+    hits: list[dict[str, Any]],
+    config: dict[str, Any],
+    relevance_by_uid: dict[str, Any],
+) -> EvalMetric:
+    k = int(config.get("k") or len(hits))
+    relevant_threshold = float(config.get("relevant_threshold") or 1.0)
+    relevance_values = _ranked_relevance(hits, relevance_by_uid, k)
+    first_relevant_rank = next(
+        (index for index, relevance in enumerate(relevance_values, start=1) if relevance >= relevant_threshold),
+        None,
+    )
+    score = 1.0 / first_relevant_rank if first_relevant_rank else 0.0
+
+    return EvalMetric(
+        name=f"mrr_at_{k}",
+        score=score,
+        details=f"score={score:.4f}; first_relevant_rank={first_relevant_rank}; threshold={relevant_threshold:g}",
+    )
+
+
 def _ndcg_at_k(
     hits: list[dict[str, Any]],
     config: dict[str, Any],
     relevance_by_uid: dict[str, Any],
-) -> EvalCheck:
+) -> EvalMetric:
     k = int(config.get("k") or len(hits))
-    minimum = float(config.get("min") or 0.0)
     actual_relevance = _ranked_relevance(hits, relevance_by_uid, k)
     ideal_relevance = sorted((float(value) for value in relevance_by_uid.values()), reverse=True)[:k]
     actual_dcg = _dcg(actual_relevance)
     ideal_dcg = _dcg(ideal_relevance)
     score = actual_dcg / ideal_dcg if ideal_dcg > 0 else 0.0
 
-    return EvalCheck(
+    return EvalMetric(
         name=f"ndcg_at_{k}",
-        passed=score >= minimum,
-        details=f"score={score:.4f}; minimum={minimum:.4f}; relevance={actual_relevance}",
+        score=score,
+        details=f"score={score:.4f}; relevance={actual_relevance}; ideal={ideal_relevance}",
     )
 
 
@@ -284,14 +373,13 @@ def _wpr_at_k(
     hits: list[dict[str, Any]],
     config: dict[str, Any],
     relevance_by_uid: dict[str, Any],
-) -> EvalCheck:
+) -> EvalMetric:
     """Project WPR metric: weighted precision over the top k ranks.
 
     WPR is not a universally standard IR acronym, so this eval defines it as
     position-weighted precision using normalized graded relevance.
     """
     k = int(config.get("k") or len(hits))
-    minimum = float(config.get("min") or 0.0)
     weights = _position_weights(config.get("position_weights"), k)
     relevance_values = _ranked_relevance(hits, relevance_by_uid, k)
     max_relevance = max((float(value) for value in relevance_by_uid.values()), default=0.0)
@@ -300,10 +388,19 @@ def _wpr_at_k(
     else:
         score = sum(weight * (rel / max_relevance) for weight, rel in zip(weights, relevance_values)) / sum(weights)
 
-    return EvalCheck(
+    return EvalMetric(
         name=f"wpr_at_{k}",
-        passed=score >= minimum,
-        details=f"score={score:.4f}; minimum={minimum:.4f}; weights={weights}; relevance={relevance_values}",
+        score=score,
+        details=f"score={score:.4f}; weights={weights}; relevance={relevance_values}",
+    )
+
+
+def _metric_threshold_check(metric: EvalMetric, config: dict[str, Any]) -> EvalCheck:
+    minimum = float(config.get("min") or 0.0)
+    return EvalCheck(
+        name=metric.name,
+        passed=metric.score >= minimum,
+        details=f"{metric.details}; minimum={minimum:.4f}",
     )
 
 

@@ -86,6 +86,9 @@ class EvalGradersTest(TestCase):
                     "prod_good": 2,
                     "prod_bad": 0,
                 },
+                "precision_at_k": {"k": 2, "min": 1.0, "relevant_threshold": 2},
+                "recall_at_k": {"k": 2, "min": 1.0, "relevant_threshold": 2},
+                "mrr": {"k": 3, "min": 1.0, "relevant_threshold": 2},
                 "ndcg_at_k": {"k": 3, "min": 0.9},
                 "wpr_at_k": {"k": 3, "min": 0.7, "position_weights": [1.0, 0.5, 0.25]},
             },
@@ -99,4 +102,8 @@ class EvalGradersTest(TestCase):
         result = grade_case_output(case, hits, retrieval_query="headphones")
 
         self.assertTrue(result.passed)
-        self.assertEqual([check.name for check in result.checks], ["ndcg_at_3", "wpr_at_3"])
+        self.assertEqual(
+            [metric.name for metric in result.metrics],
+            ["precision_at_2", "recall_at_2", "mrr_at_3", "ndcg_at_3", "wpr_at_3"],
+        )
+        self.assertEqual([check.name for check in result.checks], [metric.name for metric in result.metrics])

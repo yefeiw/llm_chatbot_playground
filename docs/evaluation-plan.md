@@ -132,6 +132,9 @@ Recommended fields:
 - `expect.selected_variant_should_match`
 - `expect.min_matching_cards`
 - `expect.max_answer_product_names`
+- `expect.precision_at_k`
+- `expect.recall_at_k`
+- `expect.mrr`
 - `expect.ndcg_at_k`
 - `expect.wpr_at_k`
 - `expect.notes`
@@ -139,6 +142,57 @@ Recommended fields:
 ## Core Search Metrics
 
 The local evals should separate strict contract checks from ranked-search metrics.
+
+### `precision@k`
+
+Use `precision@k` to measure how many of the top `k` results are relevant.
+
+Example:
+
+```json
+{
+  "graded_relevance": {
+    "prod_0225": 3,
+    "prod_0660": 3,
+    "prod_1020": 1
+  },
+  "precision_at_k": {"k": 5, "min": 0.8, "relevant_threshold": 2}
+}
+```
+
+### `recall@k`
+
+Use `recall@k` to measure how many relevant products from the labeled candidate set appear in the top `k`.
+
+Example:
+
+```json
+{
+  "graded_relevance": {
+    "prod_0225": 3,
+    "prod_0660": 3,
+    "prod_1020": 1
+  },
+  "recall_at_k": {"k": 5, "min": 0.8, "relevant_threshold": 2}
+}
+```
+
+### `MRR`
+
+Use `MRR` when one strong result near the top is enough. The local eval supports `mrr` over the top `k` results.
+
+Example:
+
+```json
+{
+  "graded_relevance": {
+    "prod_0225": 3,
+    "prod_0660": 3,
+    "prod_1020": 1
+  },
+  "mrr": {"k": 8, "min": 1.0, "relevant_threshold": 2}
+}
+```
 
 ### `nDCG@k`
 
@@ -278,6 +332,9 @@ For all cases:
 
 - `top1_in_acceptable_set`
 - `top3_contains_required_spec_matches`
+- `precision@k`: fraction of top-k results above the relevance threshold.
+- `recall@k`: fraction of labeled relevant items recovered in top-k.
+- `MRR`: reciprocal rank of the first relevant result.
 - `nDCG@k`: graded relevance with rank discount.
 - `WPR@k`: project-defined weighted precision at k.
 - `evidence_is_valid`: every evidence item appears in product fields or selected variant specs.

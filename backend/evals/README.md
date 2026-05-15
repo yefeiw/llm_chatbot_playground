@@ -34,6 +34,7 @@ The live flags call OpenAI-backed services and are intentionally opt-in. They ar
 - ranking missing a source
 - evidence that is not copied from allowed product/card fields
 - answers that reintroduce numbered product lists
+- `precision@k`, `recall@k`, `MRR`, `nDCG@k`, and project-defined `WPR@k` for cases with graded relevance labels
 
 ## Files
 
