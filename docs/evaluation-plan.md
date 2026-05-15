@@ -21,6 +21,9 @@ The core product contract is:
 
 The eval suite should test each boundary separately, then test the end-to-end `/chat` behavior.
 
+For the general search-evaluation concepts behind this plan, see
+[`search-evaluation-primer.md`](search-evaluation-primer.md).
+
 ## Useful OpenAI Tooling
 
 OpenAI's current docs describe three relevant evaluation paths:
