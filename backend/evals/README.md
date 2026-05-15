@@ -21,9 +21,12 @@ Optional live checks:
 ```bash
 PYTHONPATH=backend backend/.venv/bin/python backend/evals/run_eval.py --live-query-rewrite
 PYTHONPATH=backend backend/.venv/bin/python backend/evals/run_eval.py --live-llm-rerank
+PYTHONPATH=backend backend/.venv/bin/python backend/evals/run_eval.py --live-llm-judge
 ```
 
 The live flags call OpenAI-backed services and are intentionally opt-in. They are useful for prompt/model comparisons, but the deterministic default is the gate for product-card consistency and ranking contract regressions.
+
+`--live-llm-judge` appends one subjective `llm_judge` metric/check per case. Use it for ranking helpfulness and answer-summary quality; keep hard invariants such as variant/card consistency in deterministic graders.
 
 ## What This Catches
 

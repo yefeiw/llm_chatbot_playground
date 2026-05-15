@@ -79,6 +79,14 @@ Use OpenAI Evals or score model graders for subjective quality:
 
 Hosted Evals are useful once we have a stable dataset and want to compare prompt/model changes over time.
 
+The local runner also supports an opt-in LLM judge:
+
+```bash
+PYTHONPATH=backend backend/.venv/bin/python backend/evals/run_eval.py --live-llm-judge
+```
+
+Use this for subjective checks such as ranking helpfulness and answer-summary quality. Do not use it as the only gate for exact product-card invariants; those should remain deterministic.
+
 ## Eval Dataset Shape
 
 Start with a JSONL file such as:
@@ -137,6 +145,7 @@ Recommended fields:
 - `expect.mrr`
 - `expect.ndcg_at_k`
 - `expect.wpr_at_k`
+- `expect.llm_judge`
 - `expect.notes`
 
 ## Core Search Metrics
@@ -253,6 +262,25 @@ Example eval expectation:
 
 If a team means something else by `WPR`, such as weighted precision/recall or weighted pass rate, rename the metric in code and docs before using it in reports.
 
+### LLM Judge
+
+Use an LLM judge for subjective quality that cannot be captured by exact labels:
+
+- whether top products are helpful for the information need
+- whether tradeoffs are sensible
+- whether the answer summary is useful and consistent with cards
+- whether caveats are understandable
+
+The local runner appends an `llm_judge` metric/check only when `--live-llm-judge` is passed. Each case can set a threshold:
+
+```json
+{
+  "llm_judge": {"min": 0.8}
+}
+```
+
+The judge prompt requires a JSON score from `0.0` to `1.0` plus a short reason. Treat this as a review signal, not as ground truth. Periodically compare judge scores to human review to catch judge drift or reward hacking.
+
 ## Initial Golden Cases
 
 Seed the eval set with cases based on bugs we already found.
@@ -337,6 +365,7 @@ For all cases:
 - `MRR`: reciprocal rank of the first relevant result.
 - `nDCG@k`: graded relevance with rank discount.
 - `WPR@k`: project-defined weighted precision at k.
+- `llm_judge`: opt-in subjective model score for helpfulness and answer quality.
 - `evidence_is_valid`: every evidence item appears in product fields or selected variant specs.
 - `caveats_are_valid`: every caveat appears in allowed caveat options.
 - `rank_source_present`: `llm` or `deterministic_fallback`.

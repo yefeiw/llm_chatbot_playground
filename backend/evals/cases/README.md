@@ -21,6 +21,7 @@ Minimal shape:
     "mrr": {"k": 2, "min": 1.0, "relevant_threshold": 2},
     "ndcg_at_k": {"k": 2, "min": 0.9},
     "wpr_at_k": {"k": 2, "min": 0.9, "position_weights": [1.0, 0.8]},
+    "llm_judge": {"min": 0.8},
     "min_matching_cards": 2,
     "card_specs_equal_selected_variant_specs": true,
     "rank_source_present": true,
@@ -42,6 +43,7 @@ Supported expectations:
 - `mrr`
 - `ndcg_at_k`
 - `wpr_at_k`
+- `llm_judge`
 - `selected_variant_should_match`
 - `card_specs_equal_selected_variant_specs`
 - `acceptable_top_product_uids`

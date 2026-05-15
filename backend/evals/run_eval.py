@@ -15,6 +15,7 @@ from app.services.llm_rerank_service import LLMRerankService, fallback_rank_hits
 from app.services.query_rewrite_service import QueryRewriteService
 from app.services.variant_selection_service import enrich_hits_with_selected_variants
 from evals.graders import EvalResult, grade_case_output
+from evals.llm_judge import LLMJudge
 
 
 DEFAULT_CASES_PATH = Path(__file__).parent / "cases" / "retrieval_ranking.jsonl"
@@ -35,6 +36,22 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Call the live OpenAI LLM reranker instead of deterministic fallback ranking.",
     )
+    parser.add_argument(
+        "--live-llm-judge",
+        action="store_true",
+        help="Call an OpenAI model to judge subjective search quality after deterministic checks.",
+    )
+    parser.add_argument(
+        "--llm-judge-model",
+        default=None,
+        help="Optional model override for --live-llm-judge. Defaults to OPENAI chat model settings.",
+    )
+    parser.add_argument(
+        "--llm-judge-min-score",
+        type=float,
+        default=0.7,
+        help="Default minimum passing score for --live-llm-judge.",
+    )
     args = parser.parse_args(argv)
 
     cases = load_cases(args.cases)
@@ -44,6 +61,7 @@ def main(argv: list[str] | None = None) -> int:
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(bind=engine)
     db = sessionmaker(bind=engine, autocommit=False, autoflush=False)()
+    llm_judge = LLMJudge(model=args.llm_judge_model) if args.live_llm_judge else None
     try:
         seed_variant_db(db, products)
         results = [
@@ -54,6 +72,8 @@ def main(argv: list[str] | None = None) -> int:
                 product_by_uid,
                 live_query_rewrite=args.live_query_rewrite,
                 live_llm_rerank=args.live_llm_rerank,
+                llm_judge=llm_judge,
+                llm_judge_min_score=args.llm_judge_min_score,
             )
             for case in cases
         ]
@@ -90,6 +110,8 @@ def run_case(
     *,
     live_query_rewrite: bool,
     live_llm_rerank: bool,
+    llm_judge: LLMJudge | None,
+    llm_judge_min_score: float,
 ) -> EvalResult:
     case_input = case.get("input") or {}
     user_message = _latest_user_message(case)
@@ -101,11 +123,28 @@ def run_case(
     hits = enrich_hits_with_selected_variants(db, hits, retrieval_query)
     hits = _rank_hits(hits, user_message, retrieval_query, live_llm_rerank)
 
-    return grade_case_output(
+    result = grade_case_output(
         case,
         hits,
         retrieval_query=retrieval_query,
         answer=case_input.get("answer"),
+    )
+    if llm_judge is None:
+        return result
+
+    judge_config = (case.get("expect") or {}).get("llm_judge") or {}
+    min_score = float(judge_config.get("min") or llm_judge_min_score)
+    metric, check = llm_judge.judge(
+        case,
+        hits,
+        retrieval_query=retrieval_query,
+        answer=case_input.get("answer"),
+        min_score=min_score,
+    )
+    return EvalResult(
+        case_id=result.case_id,
+        checks=[*result.checks, check],
+        metrics=[*result.metrics, metric],
     )
 
 

@@ -257,6 +257,34 @@ For products, judges should consider:
 
 Use multiple judges for subjective cases and track agreement. When judges disagree, clarify the guideline or mark the case ambiguous.
 
+## LLM Judges
+
+LLM-as-judge evaluation can help with subjective search quality:
+
+- ranking helpfulness
+- quality of tradeoff explanations
+- answer consistency with retrieved results
+- whether caveats are understandable
+
+Use LLM judges after deterministic checks. They should not replace exact tests for category, required specs, variant/card consistency, or evidence validity.
+
+Good practice:
+
+- give the judge the information need, ranked results, selected variant specs, evidence, and answer
+- ask for a numeric score plus a short reason
+- keep the rubric stable across runs
+- compare the judge against a small set of human-labeled examples
+- track judge model and prompt version with eval results
+
+Risk:
+
+- LLM judges can be biased by surface fluency
+- they can miss subtle catalog contradictions
+- they can drift if the judge model or prompt changes
+- systems can overfit to the judge
+
+Use LLM judge scores as review signals, not as the only release gate.
+
 ## Common Pitfalls
 
 - **Evaluating only happy paths**: include typos, ambiguity, follow-ups, and impossible requests.
@@ -267,6 +295,7 @@ Use multiple judges for subjective cases and track agreement. When judges disagr
 - **Ignoring position bias online**: clicks are affected by rank and UI.
 - **Ignoring catalog freshness**: labels can go stale when product data changes.
 - **Letting generated answers hide search failures**: evaluate retrieval/ranking separately from answer generation.
+- **Trusting LLM judges without calibration**: keep deterministic checks and compare judge outputs with human review.
 
 ## Recommended Path for This Project
 
