@@ -76,3 +76,27 @@ class EvalGradersTest(TestCase):
 
         self.assertFalse(result.passed)
         self.assertEqual(result.checks[0].name, "evidence_is_valid")
+
+    def test_grade_case_output_supports_ndcg_and_wpr(self) -> None:
+        case = {
+            "case_id": "ranking_metrics",
+            "expect": {
+                "graded_relevance": {
+                    "prod_best": 3,
+                    "prod_good": 2,
+                    "prod_bad": 0,
+                },
+                "ndcg_at_k": {"k": 3, "min": 0.9},
+                "wpr_at_k": {"k": 3, "min": 0.7, "position_weights": [1.0, 0.5, 0.25]},
+            },
+        }
+        hits = [
+            {"payload": {"product_uid": "prod_best"}},
+            {"payload": {"product_uid": "prod_good"}},
+            {"payload": {"product_uid": "prod_bad"}},
+        ]
+
+        result = grade_case_output(case, hits, retrieval_query="headphones")
+
+        self.assertTrue(result.passed)
+        self.assertEqual([check.name for check in result.checks], ["ndcg_at_3", "wpr_at_3"])

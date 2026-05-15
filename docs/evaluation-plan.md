@@ -121,6 +121,7 @@ Recommended fields:
 
 - `case_id`
 - `messages`
+- `expect.graded_relevance`
 - `expect.required_category`
 - `expect.required_specs`
 - `expect.forbidden_specs`
@@ -131,7 +132,72 @@ Recommended fields:
 - `expect.selected_variant_should_match`
 - `expect.min_matching_cards`
 - `expect.max_answer_product_names`
+- `expect.ndcg_at_k`
+- `expect.wpr_at_k`
 - `expect.notes`
+
+## Core Search Metrics
+
+The local evals should separate strict contract checks from ranked-search metrics.
+
+### `nDCG@k`
+
+Use `nDCG@k` when each product can have a graded relevance label such as:
+
+- `3`: excellent match
+- `2`: good match
+- `1`: partial match
+- `0`: not relevant
+
+`DCG@k` rewards relevant products near the top of the list:
+
+```text
+DCG@k = sum((2^rel_i - 1) / log2(i + 1))
+```
+
+`nDCG@k` divides the actual DCG by the ideal DCG for the same labels. This is the main ranking metric for ecommerce-style search because it captures both result quality and order.
+
+Example eval expectation:
+
+```json
+{
+  "graded_relevance": {
+    "prod_0225": 3,
+    "prod_0660": 3,
+    "prod_1020": 1
+  },
+  "ndcg_at_k": {"k": 5, "min": 0.9}
+}
+```
+
+### `WPR@k`
+
+`WPR` is not a universal IR acronym like `nDCG`, `MAP`, or `MRR`. In this project, define it explicitly as **weighted precision at k**:
+
+```text
+WPR@k = sum(position_weight_i * normalized_relevance_i) / sum(position_weight_i)
+```
+
+Use it when we want a business-readable top-of-list score with custom position weights. For example, a shopping UI may care much more about cards 1-3 than cards 6-8.
+
+Example eval expectation:
+
+```json
+{
+  "graded_relevance": {
+    "prod_0225": 3,
+    "prod_0660": 3,
+    "prod_1020": 1
+  },
+  "wpr_at_k": {
+    "k": 5,
+    "min": 0.85,
+    "position_weights": [1.0, 0.8, 0.6, 0.4, 0.2]
+  }
+}
+```
+
+If a team means something else by `WPR`, such as weighted precision/recall or weighted pass rate, rename the metric in code and docs before using it in reports.
 
 ## Initial Golden Cases
 
@@ -212,6 +278,8 @@ For all cases:
 
 - `top1_in_acceptable_set`
 - `top3_contains_required_spec_matches`
+- `nDCG@k`: graded relevance with rank discount.
+- `WPR@k`: project-defined weighted precision at k.
 - `evidence_is_valid`: every evidence item appears in product fields or selected variant specs.
 - `caveats_are_valid`: every caveat appears in allowed caveat options.
 - `rank_source_present`: `llm` or `deterministic_fallback`.
@@ -220,6 +288,7 @@ For hand-labeled ranking, use:
 
 - `MRR`
 - `nDCG@k`
+- `WPR@k`
 - pairwise ordering accuracy for known comparisons
 
 ### Answer Metrics

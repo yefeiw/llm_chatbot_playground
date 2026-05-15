@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from typing import Any
@@ -68,6 +69,12 @@ def grade_case_output(
 
     if expected_top := _as_list(expect.get("expected_top_product_uids")):
         checks.append(_top_products_match(hits, expected_top))
+
+    if ndcg_config := _as_dict(expect.get("ndcg_at_k")):
+        checks.append(_ndcg_at_k(hits, ndcg_config, _as_dict(expect.get("graded_relevance"))))
+
+    if wpr_config := _as_dict(expect.get("wpr_at_k")):
+        checks.append(_wpr_at_k(hits, wpr_config, _as_dict(expect.get("graded_relevance"))))
 
     if expect.get("rank_source_present"):
         checks.append(_rank_source_present(hits))
@@ -251,6 +258,80 @@ def _top_products_match(hits: list[dict[str, Any]], expected_uids: list[str]) ->
         passed=actual == expected,
         details=f"actual={actual}; expected={expected}",
     )
+
+
+def _ndcg_at_k(
+    hits: list[dict[str, Any]],
+    config: dict[str, Any],
+    relevance_by_uid: dict[str, Any],
+) -> EvalCheck:
+    k = int(config.get("k") or len(hits))
+    minimum = float(config.get("min") or 0.0)
+    actual_relevance = _ranked_relevance(hits, relevance_by_uid, k)
+    ideal_relevance = sorted((float(value) for value in relevance_by_uid.values()), reverse=True)[:k]
+    actual_dcg = _dcg(actual_relevance)
+    ideal_dcg = _dcg(ideal_relevance)
+    score = actual_dcg / ideal_dcg if ideal_dcg > 0 else 0.0
+
+    return EvalCheck(
+        name=f"ndcg_at_{k}",
+        passed=score >= minimum,
+        details=f"score={score:.4f}; minimum={minimum:.4f}; relevance={actual_relevance}",
+    )
+
+
+def _wpr_at_k(
+    hits: list[dict[str, Any]],
+    config: dict[str, Any],
+    relevance_by_uid: dict[str, Any],
+) -> EvalCheck:
+    """Project WPR metric: weighted precision over the top k ranks.
+
+    WPR is not a universally standard IR acronym, so this eval defines it as
+    position-weighted precision using normalized graded relevance.
+    """
+    k = int(config.get("k") or len(hits))
+    minimum = float(config.get("min") or 0.0)
+    weights = _position_weights(config.get("position_weights"), k)
+    relevance_values = _ranked_relevance(hits, relevance_by_uid, k)
+    max_relevance = max((float(value) for value in relevance_by_uid.values()), default=0.0)
+    if max_relevance <= 0 or not weights:
+        score = 0.0
+    else:
+        score = sum(weight * (rel / max_relevance) for weight, rel in zip(weights, relevance_values)) / sum(weights)
+
+    return EvalCheck(
+        name=f"wpr_at_{k}",
+        passed=score >= minimum,
+        details=f"score={score:.4f}; minimum={minimum:.4f}; weights={weights}; relevance={relevance_values}",
+    )
+
+
+def _ranked_relevance(
+    hits: list[dict[str, Any]],
+    relevance_by_uid: dict[str, Any],
+    k: int,
+) -> list[float]:
+    values: list[float] = []
+    for hit in hits[:k]:
+        product_uid = str((hit.get("payload") or {}).get("product_uid") or "")
+        values.append(float(relevance_by_uid.get(product_uid, 0.0)))
+    while len(values) < k:
+        values.append(0.0)
+    return values
+
+
+def _dcg(relevance_values: list[float]) -> float:
+    return sum((2**rel - 1) / math.log2(index + 2) for index, rel in enumerate(relevance_values))
+
+
+def _position_weights(value: object, k: int) -> list[float]:
+    if isinstance(value, list):
+        weights = [float(item) for item in value[:k]]
+        if len(weights) < k:
+            weights.extend([weights[-1] if weights else 1.0] * (k - len(weights)))
+        return weights
+    return [1.0 / rank for rank in range(1, k + 1)]
 
 
 def _rank_source_present(hits: list[dict[str, Any]]) -> EvalCheck:

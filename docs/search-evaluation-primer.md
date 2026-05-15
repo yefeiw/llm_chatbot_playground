@@ -177,6 +177,21 @@ Good for:
 
 For this shopping assistant, `nDCG@k`, `precision@k`, and targeted constraint checks are the most useful offline metrics.
 
+### WPR@k
+
+`WPR` is not a single standard acronym across information retrieval literature. If we use it in this project, we should define it before reporting it.
+
+Recommended project definition:
+
+```text
+WPR@k = weighted precision at k
+      = sum(position_weight_i * normalized_relevance_i) / sum(position_weight_i)
+```
+
+This is useful when product slots have different business or UX importance. For example, card 1 may matter more than card 5, and card 5 may matter more than card 8. Unlike `nDCG`, which uses a standard logarithmic discount, `WPR@k` lets us choose explicit weights such as `[1.0, 0.8, 0.6, 0.4, 0.2]`.
+
+Use `WPR@k` for a practical top-of-list score that stakeholders can understand. Use `nDCG@k` as the more standard IR metric for graded ranking quality.
+
 ## Debug Metrics
 
 Aggregate metrics are not enough. Track diagnostic metrics by stage:
@@ -208,6 +223,7 @@ Aggregate metrics are not enough. Track diagnostic metrics by stage:
 
 - top1 in acceptable set
 - nDCG@k
+- WPR@k if the product/UI team has custom position weights
 - pairwise preference accuracy
 - required specs outrank partial matches
 - ranking is stable under small prompt/query changes
@@ -257,7 +273,7 @@ Use multiple judges for subjective cases and track agreement. When judges disagr
 1. Keep the current local deterministic evals as the regression gate.
 2. Expand cases from 6 to roughly 50 information needs across categories.
 3. Add graded relevance labels for top candidate products.
-4. Implement `precision@k`, `recall@k`, `MRR`, and `nDCG@k`.
+4. Implement `precision@k`, `recall@k`, `MRR`, `nDCG@k`, and project-defined `WPR@k`.
 5. Add slices:
    - category
    - query type
