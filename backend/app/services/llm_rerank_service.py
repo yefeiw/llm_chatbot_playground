@@ -52,7 +52,7 @@ class LLMRerankService:
             ranked_results = _parse_ranked_results(response.output_text)
             return _apply_llm_rank(hits, candidates, ranked_results)
         except Exception:
-            return _fallback_rank(hits, retrieval_query)
+            return fallback_rank_hits(hits, retrieval_query)
 
 
 def _candidate_from_hit(hit: dict) -> dict:
@@ -133,22 +133,49 @@ def _apply_llm_rank(hits: list[dict], candidates: list[dict], ranked_results: li
 
     missing_hits = [hit for hit in hits if str((hit.get("payload") or {}).get("product_uid")) not in seen]
     if missing_hits:
-        ranked_hits.extend(_fallback_rank(missing_hits, ""))
+        ranked_hits.extend(fallback_rank_hits(missing_hits, ""))
 
     for rank, hit in enumerate(ranked_hits, start=1):
         hit["rank"] = rank
     return ranked_hits
 
 
-def _fallback_rank(hits: list[dict], retrieval_query: str) -> list[dict]:
+def fallback_rank_hits(hits: list[dict], retrieval_query: str) -> list[dict]:
     ranked_hits = deterministic_rerank_hits(hits, retrieval_query)
     for hit in ranked_hits:
         reasons = hit.get("rerank_reasons", [])
+        candidate = _candidate_from_hit(hit)
         hit["rank_source"] = "deterministic_fallback"
-        hit["rank_evidence"] = [str(reason) for reason in reasons]
+        hit["rank_evidence"] = _fallback_evidence(reasons, candidate["evidence_options"])
         hit["rank_caveats"] = []
         hit["rank_summary"] = "Ranked by deterministic fallback."
     return ranked_hits
+
+
+def _fallback_evidence(reasons: object, allowed_options: list[str]) -> list[str]:
+    evidence = _filter_options(reasons, allowed_options)
+    if evidence:
+        return evidence
+
+    preferred_prefixes = (
+        "category:",
+        "rating:",
+        "price:",
+        "wireless:",
+        "noise_canceling:",
+        "waterproof:",
+        "water_resistant:",
+        "battery_hours:",
+        "ram_gb:",
+        "weight_kg:",
+        "material:",
+    )
+    preferred = [
+        option
+        for option in allowed_options
+        if option.startswith(preferred_prefixes)
+    ]
+    return preferred[:5] or allowed_options[:3]
 
 
 def _filter_options(values: object, allowed_options: list[str]) -> list[str]:

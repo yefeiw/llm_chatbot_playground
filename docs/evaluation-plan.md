@@ -57,7 +57,13 @@ Best for:
 - no product-list leakage in answer text
 - response schema compatibility
 
-These can be implemented as normal Python tests or a small eval runner under `backend/evals/`.
+These are now implemented as a small eval runner under `backend/evals/`.
+
+Run from the repo root:
+
+```bash
+PYTHONPATH=backend backend/.venv/bin/python backend/evals/run_eval.py
+```
 
 ### Layer 2: OpenAI Hosted or Model-Graded Evals
 
