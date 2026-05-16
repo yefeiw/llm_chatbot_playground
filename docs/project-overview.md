@@ -85,7 +85,7 @@ Retrieval now handles basic follow-up query rewriting, but it is still unstructu
 - Product images are category illustrations, not unique per-product images.
 - Product URLs are placeholders, not real product detail pages.
 - The UI has non-functional `Compare` and `Details` buttons.
-- There are focused backend tests for query rewrite, variant selection, reranking, and the ReAct demo loop; there is no full retrieval-quality eval set yet.
+- There are focused backend tests for query rewrite, variant selection, reranking, eval graders, and the ReAct demo loop, plus a local retrieval/ranking eval harness under `backend/evals/`.
 - The catalog is mock data, not a real merchant or Amazon feed.
 - Qdrant uses local file-backed storage, so only one process should access `backend/qdrant_data` at a time.
 
@@ -102,7 +102,8 @@ Retrieval now handles basic follow-up query rewriting, but it is still unstructu
    - Show why each product matched the user request.
 
 3. **Retrieval quality evaluation**
-   - Add a small eval set with expected categories and key constraints.
+   - Use [`evaluation-plan.md`](evaluation-plan.md) as the working plan.
+   - Expand the initial eval set with more expected categories and key constraints.
    - Track whether retrieved products satisfy category/spec/price requirements.
    - Run the eval before changing retrieval logic.
 
@@ -141,6 +142,7 @@ Run current sanity checks:
 ```bash
 cd backend
 python -m compileall app seed.py
+PYTHONPATH=. python evals/run_eval.py
 
 cd ../frontend
 npm run build

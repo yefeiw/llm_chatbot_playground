@@ -12,6 +12,7 @@ from app.db.models import Product, Variant, VariantAttribute
 
 RAIN_TERMS = {"rain", "water", "waterproof", "water-resistant", "water_resistant", "weather"}
 LIGHTWEIGHT_TERMS = {"carry", "carrying", "light", "lighter", "lightweight", "portable"}
+BATTERY_TERMS = {"battery", "battery-life", "battery_life"}
 
 
 def enrich_hits_with_selected_variants(db: Session, hits: list[dict], query_text: str) -> list[dict]:
@@ -88,6 +89,7 @@ def _select_variant(variants: list[dict[str, Any]], query_text: str, category: s
     query = query_text.lower()
     wants_rain = any(term in query for term in RAIN_TERMS)
     wants_lightweight = any(term in query for term in LIGHTWEIGHT_TERMS)
+    wants_battery = any(term in query for term in BATTERY_TERMS)
     weights = [_parse_weight_kg(variant["attrs"]) for variant in variants]
     known_weights = [weight for weight in weights if weight is not None]
     max_weight = max(known_weights) if known_weights else None
@@ -103,8 +105,13 @@ def _select_variant(variants: list[dict[str, Any]], query_text: str, category: s
             if token and token in attr_blob:
                 score += 1.0
 
+        score += _explicit_spec_match_score(attrs, query)
+
         if wants_lightweight and max_weight is not None and weight is not None:
             score += (max_weight - weight) * 2.0
+
+        if wants_battery:
+            score += _battery_score(attrs)
 
         if wants_rain:
             score += _rain_score(attrs)
@@ -152,6 +159,39 @@ def _rain_score(attrs: dict[str, str]) -> float:
     elif material == "fabric":
         score -= 1.0
 
+    return score
+
+
+def _explicit_spec_match_score(attrs: dict[str, str], query: str) -> float:
+    score = 0.0
+    for attr_name, triggers in {
+        "wireless": ("wireless",),
+        "noise_canceling": ("noise canceling", "noise-canceling", "noise_canceling"),
+        "waterproof": ("waterproof",),
+        "water_resistant": ("water resistant", "water-resistant", "water_resistant"),
+        "spinner_wheels": ("spinner wheels", "spinner-wheels", "spinner_wheels"),
+        "lumbar_support": ("lumbar support", "lumbar-support", "lumbar_support"),
+    }.items():
+        if not any(trigger in query for trigger in triggers):
+            continue
+        if attrs.get(attr_name) == "yes":
+            score += 6.0
+        elif attrs.get(attr_name) == "no":
+            score -= 4.0
+    return score
+
+
+def _battery_score(attrs: dict[str, str]) -> float:
+    score = 0.0
+    battery_hours = _parse_float(attrs.get("battery_hours"))
+    battery_minutes = _parse_float(attrs.get("battery_minutes"))
+    battery_days = _parse_float(attrs.get("battery_days"))
+    if battery_hours is not None:
+        score += min(battery_hours, 60.0) / 60.0 * 1.5
+    if battery_minutes is not None:
+        score += min(battery_minutes, 120.0) / 120.0 * 1.5
+    if battery_days is not None:
+        score += min(battery_days, 14.0) / 14.0 * 1.5
     return score
 
 

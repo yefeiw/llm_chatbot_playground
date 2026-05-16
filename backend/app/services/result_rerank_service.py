@@ -65,11 +65,11 @@ def _score_hit(hit: dict, query: str, budget_cents: int | None) -> tuple[float, 
 def _category_score(payload: dict, query: str, reasons: list[str]) -> float:
     category = str(payload.get("category") or "").replace("_", " ").lower()
     if category and category in query:
-        reasons.append(f"matches {category}")
+        reasons.append(f"category: {payload.get('category')}")
         return 1.0
     singular_category = category[:-1] if category.endswith("s") else category
     if singular_category and singular_category in query:
-        reasons.append(f"matches {category}")
+        reasons.append(f"category: {payload.get('category')}")
         return 1.0
     return 0.0
 
@@ -78,13 +78,27 @@ def _spec_quality_score(payload: dict, query: str, attrs: dict[str, str], reason
     category = str(payload.get("category") or "")
     score = 0.0
 
+    score += _explicit_boolean_spec_score(
+        attrs,
+        query,
+        reasons,
+        {
+            "wireless": ("wireless",),
+            "noise_canceling": ("noise canceling", "noise-canceling", "noise_canceling"),
+            "waterproof": ("waterproof",),
+            "water_resistant": ("water resistant", "water-resistant", "water_resistant"),
+            "spinner_wheels": ("spinner wheels", "spinner-wheels", "spinner_wheels"),
+            "lumbar_support": ("lumbar support", "lumbar-support", "lumbar_support"),
+        },
+    )
+
     if category == "laptops":
         ram_gb = _as_float(attrs.get("ram_gb"))
         storage_gb = _as_float(attrs.get("storage_gb"))
         if ram_gb is not None:
             score += min(ram_gb, 32.0) / 32.0 * 0.6
             if ram_gb >= 32:
-                reasons.append("32GB RAM")
+                reasons.append(f"ram_gb: {int(ram_gb)}")
         if storage_gb is not None:
             score += min(storage_gb, 1024.0) / 1024.0 * 0.35
 
@@ -92,22 +106,59 @@ def _spec_quality_score(payload: dict, query: str, attrs: dict[str, str], reason
         weight_kg = _as_float(attrs.get("weight_kg"))
         if weight_kg is not None:
             score += max(0.0, 4.0 - weight_kg) * 0.4
-            reasons.append(f"{weight_kg:g} kg")
+            reasons.append(f"weight_kg: {weight_kg:g}")
+
+    if "battery" in query:
+        battery_hours = _as_float(attrs.get("battery_hours"))
+        battery_minutes = _as_float(attrs.get("battery_minutes"))
+        battery_days = _as_float(attrs.get("battery_days"))
+        if battery_hours is not None:
+            score += min(battery_hours, 60.0) / 60.0 * 1.2
+            reasons.append(f"battery_hours: {int(battery_hours)}")
+        if battery_minutes is not None:
+            score += min(battery_minutes, 120.0) / 120.0 * 1.2
+            reasons.append(f"battery_minutes: {int(battery_minutes)}")
+        if battery_days is not None:
+            score += min(battery_days, 14.0) / 14.0 * 1.2
+            reasons.append(f"battery_days: {int(battery_days)}")
 
     if any(term in query for term in {"rain", "water", "waterproof", "water-resistant", "weather"}):
         if attrs.get("water_resistant") == "yes" or attrs.get("waterproof") == "yes":
             score += 2.0
-            reasons.append("water protection")
+            if attrs.get("water_resistant") == "yes":
+                reasons.append("water_resistant: yes")
+            if attrs.get("waterproof") == "yes":
+                reasons.append("waterproof: yes")
         elif attrs.get("water_resistant_atm"):
             score += 1.5
-            reasons.append("water resistance")
+            reasons.append(f"water_resistant_atm: {attrs['water_resistant_atm']}")
         elif attrs.get("material") == "leatherette":
             score += 0.7
-            reasons.append("leatherette material")
+            reasons.append("material: leatherette")
         elif attrs.get("material") == "mesh":
             score += 0.35
-            reasons.append("mesh material")
+            reasons.append("material: mesh")
 
+    return score
+
+
+def _explicit_boolean_spec_score(
+    attrs: dict[str, str],
+    query: str,
+    reasons: list[str],
+    triggers_by_attr: dict[str, tuple[str, ...]],
+) -> float:
+    score = 0.0
+    for attr_name, triggers in triggers_by_attr.items():
+        if not any(trigger in query for trigger in triggers):
+            continue
+        value = attrs.get(attr_name)
+        if value == "yes":
+            score += 2.5
+            reasons.append(f"{attr_name}: yes")
+        elif value == "no":
+            score -= 2.0
+            reasons.append(f"{attr_name}: no")
     return score
 
 
